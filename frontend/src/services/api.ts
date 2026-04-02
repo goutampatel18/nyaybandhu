@@ -65,5 +65,14 @@ export async function checkHealth(): Promise<{ status: string }> {
   return apiFetch<{ status: string }>('/health');
 }
 
+/**
+ * Trigger the RAG document ingestion pipeline on the backend.
+ */
+export async function ingestDocuments(): Promise<import('@/types').IngestResponse> {
+  return apiFetch('/documents/ingest', {
+    method: 'POST',
+  });
+}
+
 // Re-export for convenience
 export { apiFetch, BASE_URL };

@@ -72,6 +72,7 @@ export const ChatbotProvider: React.FC<{ children: React.ReactNode }> = ({ child
           text: response.reply,
           sender: 'bot',
           timestamp: new Date(),
+          sources: response.sources,
         };
         setMessages((prev) => [...prev, botMessage]);
       })

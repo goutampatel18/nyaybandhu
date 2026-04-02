@@ -3,7 +3,7 @@
 from fastapi import APIRouter
 
 from app.schemas.chatbot import ChatRequest, ChatResponse
-from app.services.chatbot import generate_bot_response
+from app.rag.chain import generate_rag_response
 
 router = APIRouter()
 
@@ -11,10 +11,11 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Process a user's legal question and return a response.
-
-    Currently uses keyword matching. Can be upgraded to use
-    an LLM or retrieval-augmented generation (RAG) pipeline.
+    Process a user's legal question and return a response using the RAG pipeline.
     """
-    reply = generate_bot_response(request.message)
-    return ChatResponse(reply=reply)
+    # Generating response using Ollama + FAISS RAG setup
+    response_data = await generate_rag_response(request.message)
+    return ChatResponse(
+        reply=response_data["reply"],
+        sources=response_data["sources"],
+    )

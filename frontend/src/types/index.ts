@@ -7,6 +7,7 @@ export interface ChatMessage {
   text: string;
   sender: 'bot' | 'user';
   timestamp: Date;
+  sources?: Array<{ name: string; type: string }>;
 }
 
 // ========================
@@ -82,9 +83,33 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   reply: string;
+  sources?: Array<{ name: string; type: string }>;
 }
 
 export interface ApiError {
   message: string;
   status: number;
+}
+
+// ========================
+// Document/RAG Types
+// ========================
+
+export interface DocumentInfo {
+  name: string;
+  type: string;
+  size?: number;
+}
+
+export interface UploadResponse {
+  status: string;
+  message: string;
+  filename: string;
+}
+
+export interface IngestResponse {
+  status: string;
+  message: string;
+  documents_loaded: number;
+  chunks_created: number;
 }

@@ -87,7 +87,20 @@ const Chatbot: React.FC = () => {
           <div className="chatbot-messages">
             {messages.map((msg) => (
               <div key={msg.id} className={`chatbot-message ${msg.sender} animate-fade-in`}>
-                {msg.text}
+                <div className="whitespace-pre-wrap">{msg.text}</div>
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-india-blue/10">
+                    <span className="text-[10px] font-semibold text-india-blue block mb-1">SOURCES:</span>
+                    <ul className="space-y-1">
+                      {msg.sources.map((source, idx) => (
+                        <li key={idx} className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-india-saffron"></span>
+                          {source.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
             {isTyping && (

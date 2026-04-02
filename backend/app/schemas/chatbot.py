@@ -22,3 +22,7 @@ class ChatResponse(BaseModel):
         ...,
         description="The bot's response to the user's query",
     )
+    sources: list[dict] = Field(
+        default_factory=list,
+        description="Sources used to generate the response",
+    )

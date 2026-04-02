@@ -4,3 +4,16 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 python-dotenv>=1.0.0
 python-multipart>=0.0.6
+
+# RAG Pipeline
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-huggingface>=0.1.0
+faiss-cpu>=1.7.4
+sentence-transformers>=2.2.2
+
+# Document Loaders
+pypdf>=3.17.0
+
+# Utilities
+aiofiles>=23.2.1

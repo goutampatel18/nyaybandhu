@@ -5,7 +5,6 @@ import type { NavItem, ExternalLink } from '@/types';
 // ========================
 
 export const NAV_ITEMS: NavItem[] = [
-  { name: 'Home', path: '/' },
   { name: 'Services', path: '/services' },
   { name: 'Resources', path: '/resources' },
   { name: 'Library', path: '/library' },
