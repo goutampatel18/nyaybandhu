@@ -1,11 +1,12 @@
-"""Pydantic schemas for chatbot request/response validation."""
+"""Pydantic schemas for chatbot request, response, and history."""
 
-from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatRequest(BaseModel):
-    """Incoming chat message from the frontend."""
-
     message: str = Field(
         ...,
         min_length=1,
@@ -16,13 +17,23 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """Chatbot response sent back to the frontend."""
-
-    reply: str = Field(
-        ...,
-        description="The bot's response to the user's query",
-    )
-    sources: list[dict] = Field(
+    reply: str = Field(..., description="The bot's response to the user's query")
+    sources: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Sources used to generate the response",
     )
+
+
+class ChatHistoryItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    question: str
+    response: str
+    sources: list[dict[str, Any]] = Field(default_factory=list)
+    created_at: datetime
+
+
+class ChatHistoryResponse(BaseModel):
+    history: list[ChatHistoryItem]
+    total: int

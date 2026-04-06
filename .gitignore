@@ -1,62 +1,46 @@
-# ==============================
-# Editor directories and files
-# ==============================
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
-# ==============================
-# Frontend (Node/React/Vite)
-# ==============================
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/*.local
-frontend/logs/
-frontend/*.log
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
-frontend/lerna-debug.log*
-frontend/.env.local
-frontend/.env.*.local
 
-# ==============================
-# Backend (Python/FastAPI/RAG)
-# ==============================
-backend/venv/
-backend/env/
-backend/.env
-backend/__pycache__/
-backend/*.pyc
-backend/*.pyo
-backend/*.pyd
-backend/.Python
-backend/pip-log.txt
-backend/pip-delete-this-directory.txt
-backend/.tox/
-backend/.coverage
-backend/.coverage.*
-backend/.cache
-backend/nosetests.xml
-backend/coverage.xml
-backend/*.cover
-backend/*.log
-backend/.pytest_cache/
-backend/vector_store/
-backend/ingest_log.txt
-backend/run_ingest.py
+**pycache**/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+*.db
 
-# ==============================
-# Root/Misc
-# ==============================
+
+venv/
 .env
-.env.local
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+
+*.pid
+*.sock
+
+*.sql
+*.dump
+backend/vector_store/
+vector_store/
+
+frontend/node_modules/
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+.env
+backend/.env
+frontend/.env
+
+coverage/
+.cache/

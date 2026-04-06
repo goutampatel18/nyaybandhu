@@ -6,7 +6,14 @@
  * Default: http://localhost:8000/api
  */
 
-import type { ChatResponse, ApiError } from '@/types';
+import type {
+  ApiError,
+  ChatHistoryResponse,
+  ChatResponse,
+  DocumentsResponse,
+  IngestResponse,
+  UploadResponse,
+} from '@/types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -18,10 +25,12 @@ async function apiFetch<T>(
   options?: RequestInit
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
+  const isFormData = options?.body instanceof FormData;
+
   const response = await fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(options?.headers ?? {}),
     },
     ...options,
   });
@@ -71,6 +80,30 @@ export async function checkHealth(): Promise<{ status: string }> {
 export async function ingestDocuments(): Promise<import('@/types').IngestResponse> {
   return apiFetch('/documents/ingest', {
     method: 'POST',
+  });
+}
+
+export async function getDocuments(): Promise<DocumentsResponse> {
+  return apiFetch<DocumentsResponse>('/documents');
+}
+
+export async function getChatHistory(limit = 20): Promise<ChatHistoryResponse> {
+  return apiFetch<ChatHistoryResponse>(`/chat-history?limit=${limit}`);
+}
+
+export async function uploadDocuments(
+  files: File[] | FileList,
+  options?: { ingest?: boolean }
+): Promise<UploadResponse> {
+  const formData = new FormData();
+  Array.from(files).forEach((file) => {
+    formData.append('files', file);
+  });
+
+  const ingest = options?.ingest ? '?ingest=true' : '';
+  return apiFetch<UploadResponse>(`/upload${ingest}`, {
+    method: 'POST',
+    body: formData,
   });
 }
 

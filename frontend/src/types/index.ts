@@ -86,6 +86,19 @@ export interface ChatResponse {
   sources?: Array<{ name: string; type: string }>;
 }
 
+export interface ChatHistoryItem {
+  id: number;
+  question: string;
+  response: string;
+  sources: Array<{ name: string; type: string }>;
+  created_at: string;
+}
+
+export interface ChatHistoryResponse {
+  history: ChatHistoryItem[];
+  total: number;
+}
+
 export interface ApiError {
   message: string;
   status: number;
@@ -96,15 +109,29 @@ export interface ApiError {
 // ========================
 
 export interface DocumentInfo {
-  name: string;
-  type: string;
-  size?: number;
+  id: number;
+  filename: string;
+  stored_filename: string;
+  file_path: string;
+  content_type?: string | null;
+  file_size?: number | null;
+  status: string;
+  chunk_count: number;
+  created_at: string;
+  updated_at?: string | null;
+  ingested_at?: string | null;
 }
 
 export interface UploadResponse {
   status: string;
   message: string;
-  filename: string;
+  uploaded: DocumentInfo[];
+  ingestion?: IngestResponse | null;
+}
+
+export interface DocumentsResponse {
+  documents: DocumentInfo[];
+  total: number;
 }
 
 export interface IngestResponse {

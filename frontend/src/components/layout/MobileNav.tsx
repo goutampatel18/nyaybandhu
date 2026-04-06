@@ -13,6 +13,7 @@ interface MobileNavProps {
 
 const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose, navItems, aboutUsItems }) => {
   const location = useLocation();
+  const primaryNavItems = navItems.filter((item) => item.path !== "/");
 
   if (!isOpen) return null;
 
@@ -68,7 +69,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose, navItems, aboutU
             </div>
           </div>
 
-          {navItems.map((item) => (
+          {primaryNavItems.map((item) => (
             <Link
               key={item.name}
               to={item.path}

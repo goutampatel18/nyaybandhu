@@ -1,10 +1,10 @@
 """Pydantic schemas for library resources."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BookResponse(BaseModel):
-    """A legal book in the library."""
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
 
     title: str
     author: str
@@ -12,29 +12,19 @@ class BookResponse(BaseModel):
     description: str
     cover_image: str = Field(alias="coverImage", default="")
 
-    class Config:
-        populate_by_name = True
-
 
 class ActResponse(BaseModel):
-    """A bare act / legislation."""
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
 
     name: str
     last_updated: str = Field(alias="lastUpdated", default="")
 
-    class Config:
-        populate_by_name = True
-
 
 class LibraryBooksResponse(BaseModel):
-    """Response containing a list of legal books."""
-
     books: list[BookResponse]
     total: int
 
 
 class LibraryActsResponse(BaseModel):
-    """Response containing a list of bare acts."""
-
     acts: list[ActResponse]
     total: int

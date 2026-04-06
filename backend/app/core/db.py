@@ -1,15 +1,11 @@
-"""
-Database placeholder.
-Replace with actual MongoDB/PostgreSQL/SQLite connection when needed.
-"""
+"""Backward-compatible database dependency exports."""
+
+from app.db.session import AsyncSessionLocal, engine, get_db_session
 
 
 async def get_db():
-    """Dependency placeholder for database sessions."""
-    # TODO: Implement actual database connection
-    # Example for MongoDB:
-    #   from motor.motor_asyncio import AsyncIOMotorClient
-    #   client = AsyncIOMotorClient(settings.database_url)
-    #   db = client[settings.database_name]
-    #   yield db
-    yield None
+    async for session in get_db_session():
+        yield session
+
+
+__all__ = ["AsyncSessionLocal", "engine", "get_db", "get_db_session"]

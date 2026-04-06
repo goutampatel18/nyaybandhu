@@ -1,37 +1,70 @@
-"""Documents route — handles data ingestion and index management."""
+"""Documents route handles uploads, listing, and index management."""
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.session import get_db_session
 from app.rag.pipeline import ingest_documents
+from app.schemas.documents import (
+    DocumentListResponse,
+    DocumentResponse,
+    IngestResponse,
+    UploadResponse,
+)
+from app.services.documents import list_documents, upload_documents
 
 router = APIRouter()
 
 
-class IngestResponse(BaseModel):
-    status: str
-    message: str
-    documents_loaded: int = 0
-    chunks_created: int = 0
+@router.post("/upload", response_model=UploadResponse)
+async def upload_documents_route(
+    files: list[UploadFile] = File(...),
+    ingest: bool = Query(default=False),
+    session: AsyncSession = Depends(get_db_session),
+):
+    if not files:
+        raise HTTPException(status_code=400, detail="No files were provided for upload.")
+
+    uploaded_records, ingestion_result = await upload_documents(
+        session,
+        files,
+        ingest_after_upload=ingest,
+    )
+
+    if not uploaded_records:
+        raise HTTPException(status_code=400, detail="Uploaded files were empty.")
+
+    return UploadResponse(
+        status="success",
+        message="Files uploaded successfully.",
+        uploaded=[DocumentResponse.model_validate(record) for record in uploaded_records],
+        ingestion=IngestResponse(**ingestion_result) if ingestion_result else None,
+    )
 
 
-@router.post("/ingest", response_model=IngestResponse)
-async def trigger_ingestion(background_tasks: BackgroundTasks):
-    """
-    Trigger the RAG document ingestion pipeline.
-    This reads from the configured datasets directory and builds a new FAISS index.
-    
-    Warning: This endpoint runs synchronously for this demo, keeping it simple.
-    In production, use background_tasks or Celery.
-    """
+@router.get("/documents", response_model=DocumentListResponse)
+async def list_documents_route(
+    session: AsyncSession = Depends(get_db_session),
+):
+    documents = await list_documents(session)
+    return DocumentListResponse(
+        documents=[DocumentResponse.model_validate(document) for document in documents],
+        total=len(documents),
+    )
+
+
+@router.post("/documents/ingest", response_model=IngestResponse)
+async def trigger_ingestion(
+    session: AsyncSession = Depends(get_db_session),
+):
     try:
-        # Note: In a real app we'd trigger this via background_tasks,
-        # but returning exact numbers synchronously is better for this demo.
-        result = ingest_documents()
-        
+        result = await ingest_documents(session)
+
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
-            
+
         return IngestResponse(**result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

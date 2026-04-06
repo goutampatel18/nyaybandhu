@@ -1,16 +1,15 @@
-"""
-RAG Chain — combines retrieval with LLM generation.
-Uses Ollama for the LLM and FAISS for retrieval.
-Falls back to context-only responses if Ollama is unavailable.
-"""
+"""RAG chain for retrieval plus generation."""
 
-from typing import List, Optional
-from langchain.schema import Document
-from app.rag.vector_store import query_vector_store, get_vector_store
+import logging
+
+from langchain_core.documents import Document
+
 from app.core.config import settings
+from app.rag.vector_store import get_vector_store, query_vector_store
 
+logger = logging.getLogger(__name__)
 
-LEGAL_SYSTEM_PROMPT = """You are NyayBandhu, an AI legal assistant specializing in Indian law. 
+LEGAL_SYSTEM_PROMPT = """You are NyayBandhu, an AI legal assistant specializing in Indian law.
 You are created by the Department of Justice, Government of India.
 Your role is to provide accurate, helpful information about Indian law, constitution, and legal procedures.
 
@@ -24,46 +23,42 @@ IMPORTANT RULES:
 """
 
 
-def _format_context(documents: List[Document]) -> str:
-    """Format retrieved documents into a context string."""
+def _format_context(documents: list[Document]) -> str:
     if not documents:
         return "No relevant context found."
 
-    context_parts = []
-    for i, doc in enumerate(documents, 1):
-        source = doc.metadata.get("source", "Unknown")
-        context_parts.append(f"[Source {i}: {source}]\n{doc.page_content}")
+    cleaned = []
+    for doc in documents:
+        content = doc.page_content.strip()
 
-    return "\n\n---\n\n".join(context_parts)
+        # Remove unwanted patterns (numbers, noise)
+        if len(content) < 30:
+            continue
+
+        cleaned.append(content)
+
+    return "\n\n".join(cleaned[:3])  # only top 3 clean chunks
 
 
-def _extract_sources(documents: List[Document]) -> List[dict]:
-    """Extract source information from retrieved documents."""
+def _extract_sources(documents: list[Document]) -> list[dict]:
     sources = []
     seen = set()
-    for doc in documents:
-        source = doc.metadata.get("source", "Unknown")
-        if source not in seen:
-            seen.add(source)
-            sources.append({
+    for document in documents:
+        source = document.metadata.get("source", "Unknown")
+        if source in seen:
+            continue
+        seen.add(source)
+        sources.append(
+            {
                 "name": source,
-                "type": doc.metadata.get("type", "document"),
-            })
+                "type": document.metadata.get("type", "document"),
+            }
+        )
     return sources
 
 
 async def generate_rag_response(query: str) -> dict:
-    """
-    Generate a response using RAG pipeline:
-    1. Retrieve relevant documents from FAISS
-    2. Try to generate response via Ollama LLM
-    3. Fall back to context-based response if Ollama unavailable
-    
-    Returns dict with 'reply' and 'sources'.
-    """
-    # Step 1: Check if vector store exists
-    vs = get_vector_store()
-    if vs is None:
+    if get_vector_store() is None:
         return {
             "reply": (
                 "The knowledge base has not been initialized yet. "
@@ -73,8 +68,7 @@ async def generate_rag_response(query: str) -> dict:
             "sources": [],
         }
 
-    # Step 2: Retrieve relevant documents
-    retrieved_docs = query_vector_store(query, k=4)
+    retrieved_docs = query_vector_store(query, k=3)
 
     if not retrieved_docs:
         return {
@@ -86,16 +80,16 @@ async def generate_rag_response(query: str) -> dict:
             "sources": [],
         }
 
-    # Step 3: Format context
     context = _format_context(retrieved_docs)
     sources = _extract_sources(retrieved_docs)
 
-    # Step 4: Try LLM generation via Ollama
     try:
         reply = await _generate_with_ollama(query, context)
-    except Exception as e:
-        print(f"Ollama unavailable ({e}), falling back to context-based response")
-        reply = _generate_context_response(query, retrieved_docs)
+    except Exception as exc:
+        logger.warning(
+            "Ollama unavailable (%s), falling back to context-based response", exc
+        )
+        reply = _generate_context_response(retrieved_docs)
 
     return {
         "reply": reply,
@@ -104,17 +98,27 @@ async def generate_rag_response(query: str) -> dict:
 
 
 async def _generate_with_ollama(query: str, context: str) -> str:
-    """Generate a response using Ollama LLM."""
     import httpx
 
-    prompt = f"""{LEGAL_SYSTEM_PROMPT}
+    prompt = f"""
+You are NyayBandhu, an AI legal assistant for Indian law.
 
-Context from legal knowledge base:
+STRICT INSTRUCTIONS:
+- Answer ONLY from the given context
+- Give a clear, structured explanation
+- Do NOT copy raw text
+- Do NOT include random numbers or irrelevant lines
+- If answer is not clear → say "Not found in legal database"
+- Keep answer simple and helpful
+
+Context:
 {context}
 
-User Question: {query}
+Question:
+{query}
 
-Based on the context provided, give a clear, accurate, and helpful answer. If the context doesn't fully answer the question, acknowledge what you know and what you don't."""
+Answer (in clear explanation form):
+"""
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
@@ -132,33 +136,32 @@ Based on the context provided, give a clear, accurate, and helpful answer. If th
         )
         response.raise_for_status()
         data = response.json()
-        return data.get("response", "I apologize, but I couldn't generate a response. Please try again.")
+        return data.get(
+            "response",
+            "I apologize, but I couldn't generate a response. Please try again.",
+        )
 
 
-def _generate_context_response(query: str, documents: List[Document]) -> str:
-    """
-    Generate a response directly from context when Ollama is unavailable.
-    Returns the most relevant document content with a helpful wrapper.
-    """
+def _generate_context_response(documents: list[Document]) -> str:
     if not documents:
         return "I couldn't find relevant information for your query."
 
-    # Use the most relevant document(s)
-    best_doc = documents[0]
-    content = best_doc.page_content.strip()
+    best_document = documents[0]
+    content = best_document.page_content.strip()
 
-    # If it's a QA pair, extract the answer
     if content.startswith("Question:") and "\nAnswer:" in content:
         answer = content.split("\nAnswer:", 1)[1].strip()
         return (
             f"{answer}\n\n"
-            f"📚 Source: {best_doc.metadata.get('source', 'Legal Knowledge Base')}\n\n"
-            f"⚠️ Note: This information is from our legal database. For specific legal advice, "
-            f"please consult a qualified lawyer or contact NALSA helpline at 15100."
+            f"Source: {best_document.metadata.get('source', 'Legal Knowledge Base')}\n\n"
+            "Note: This information is from our legal database. For specific legal advice, "
+            "please consult a qualified lawyer or contact NALSA helpline at 15100."
         )
 
-    return (
-        f"Based on our legal knowledge base:\n\n{content[:800]}\n\n"
-        f"📚 Source: {best_doc.metadata.get('source', 'Legal Knowledge Base')}\n\n"
-        f"⚠️ Note: For specific legal advice, please consult a qualified lawyer."
-    )
+    return f"""
+Here is the relevant legal information:
+
+{content[:500]}
+
+Note: This is extracted from legal documents. Please consult a lawyer for final advice.
+"""

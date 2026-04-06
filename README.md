@@ -1,104 +1,229 @@
-# NyayBandhu: AI Legal Assistant
+# ⚖️ NyayBandhu – AI Legal Assistant (RAG + Local LLM)
 
-NyayBandhu is a robust, modern, full-stack platform designed to provide accessible legal information and assistance to Indian citizens. Built with a React + Vite frontend and a highly scalable FastAPI backend, it features a comprehensive Retrieval-Augmented Generation (RAG) chatbot using HuggingFace embeddings, FAISS vector search, and Ollama.
+NyayBandhu is a full-stack AI-powered legal assistant designed to make Indian legal information accessible to everyone. It uses a **Retrieval-Augmented Generation (RAG)** pipeline with a local LLM (Ollama), FAISS vector search, and FastAPI backend.
 
-![NyayBandhu Banner](https://via.placeholder.com/1000x300?text=NyayBandhu+AI+Legal+Assistant)
+---
 
-## 🌟 Key Features
+## 🚀 Features
 
-- **🎓 Modern UI:** Highly responsive UI utilizing India-themed aesthetics (India Saffron & Blue), fully optimized for citizens to explore legal rights, resources, and case histories.
-- **🤖 Robust RAG Chatbot:** Ask complex questions about the Indian Constitution, IPC, and labor laws, and get answers grounded entirely in the internal knowledge base with precise source citations.
-- **📚 Rich Knowledge Base:** Includes curated pages for Citizen's Charters, historical archives, legal aid, circulars, and comprehensive case databases.
-- **⚡ High-Performance Backend:** Engineered using Python, FastAPI, and Pydantic for high concurrency and type safety.
-- **🔒 Local-First AI:** Leverages local LLMs via Ollama (`llama3.2`) and local embeddings via `sentence-transformers`, meaning your legal data never leaves your infrastructure!
+* 🤖 AI Legal Chatbot (Indian Law focused)
+* 📚 RAG Pipeline (FAISS + HuggingFace embeddings)
+* 🧠 Local LLM (Ollama – no external API)
+* ⚡ FastAPI backend (async + scalable)
+* 🎨 React + Vite frontend
+* 🗄️ PostgreSQL database (chat history, metadata)
+* 🔒 Privacy-first (runs locally)
 
-## 🚀 Directory Structure
+---
 
-```text
-📁 nyaybandhu/
-├── 📁 frontend/            # React (TypeScript) frontend application
-│   ├── src/                # Components, hooks, pages, contexts
-│   └── package.json        
-├── 📁 backend/             # Python FastAPI backend application
-│   ├── app/                # Main application logic (routes, schemas, rag)
-│   ├── vector_store/       # FAISS indexes for RAG
-│   └── requirements.txt    
-└── 📁 datasets/            # Core datasets for Document Ingestion (CSV, JSON, PDF)
+## 🏗️ Tech Stack
+
+**Frontend**
+
+* React (TypeScript)
+* Vite
+* Tailwind CSS
+
+**Backend**
+
+* FastAPI
+* PostgreSQL + SQLAlchemy
+* FAISS (Vector DB)
+* Sentence Transformers
+
+**AI / ML**
+
+* Ollama (LLM)
+* HuggingFace embeddings
+
+---
+
+## 📁 Project Structure
+
+```
+nyaybandhu/
+├── frontend/
+├── backend/
+│   ├── app/
+│   ├── vector_store/
+│   └── requirements.txt
+├── datasets/
+└── README.md
 ```
 
-## 🛠️ Installation & Setup
+---
 
-### 1. Run the Frontend
+## ⚙️ Prerequisites
 
-The frontend is built using Vite, React, and Tailwind CSS.
+Make sure you have installed:
+
+* Python 3.10+
+* Node.js (v18+)
+* PostgreSQL
+* Ollama
+
+---
+
+## 🧠 Step 1: Setup Ollama
+
+Install Ollama:
+
+👉 https://ollama.com
+
+Run:
+
+```bash
+ollama pull llama3.2
+```
+
+Start server (auto runs usually):
+
+```bash
+ollama serve
+```
+
+---
+
+## 🗄️ Step 2: Setup PostgreSQL
+
+1. Open psql:
+
+```bash
+psql -U postgres
+```
+
+2. Create database:
+
+```sql
+CREATE DATABASE nyaybandhu;
+```
+
+---
+
+## ⚙️ Step 3: Backend Setup
+
+```bash
+cd backend
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+
+pip install -r requirements.txt
+```
+
+---
+
+## 🔐 Step 4: Environment Variables
+
+Create `.env` inside `backend/`:
+
+```ini
+APP_NAME="NyayBandhu API"
+DEBUG=true
+
+DATABASE_URL=postgresql+asyncpg://postgres:YOUR_PASSWORD@localhost:5432/nyaybandhu
+
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+VECTOR_STORE_PATH=./vector_store
+DATA_DIR=../datasets
+
+CHUNK_SIZE=300
+CHUNK_OVERLAP=50
+```
+
+---
+
+## ▶️ Step 5: Run Backend
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Open:
+
+```
+http://localhost:8000/docs
+```
+
+---
+
+## 📄 Step 6: Build Knowledge Base (IMPORTANT)
+
+Run this endpoint:
+
+```
+POST /api/documents/ingest
+```
+
+👉 This creates FAISS vector index
+👉 Must run before using chatbot
+
+---
+
+## 🎨 Step 7: Frontend Setup
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-> The frontend will be available at `http://localhost:5173`.
 
-### 2. Configure the Backend
+Open:
 
-The backend utilizes Python 3.10+ and requires Ollama running locally.
-
-```bash
-cd backend
-python -m venv venv
-
-# On Windows:
-.\venv\Scripts\activate
-# On macOS/Linux:
-# source venv/bin/activate
-
-pip install -r requirements.txt
+```
+http://localhost:5173
 ```
 
-### 3. Provide Environment Variables
+---
 
-Create a `.env` file inside the `backend/` folder:
+## 💬 How to Use
 
-```ini
-APP_NAME="NyayBandhu API"
-APP_VERSION="1.0.0"
-DEBUG=true
-CORS_ORIGINS="http://localhost:5173,http://localhost:8080"
-OLLAMA_BASE_URL="http://localhost:11434"
-OLLAMA_MODEL="llama3.2"
-EMBEDDING_MODEL="all-MiniLM-L6-v2"
-VECTOR_STORE_PATH="./vector_store"
-DATA_DIR="../datasets"
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
+Ask questions like:
+
+* What is IPC 420?
+* Explain Indian Constitution
+* What are labour laws?
+
+---
+
+## 🧠 How it Works
+
+```
+User → React UI
+     → FastAPI Backend
+     → FAISS (retrieve documents)
+     → Ollama (generate response)
+     → Answer + Sources
 ```
 
-*Note: Ensure [Ollama](https://ollama.com/) is installed and the `llama3.2` model is pulled (`ollama pull llama3.2`).*
+---
 
-### 4. Run the Backend & Build Knowledge Base
+## ⚠️ Notes
 
-Start the FastAPI server:
+* First response may be slow (model loading)
+* Ensure PostgreSQL is running
+* Ensure Ollama is running
+* Re-run ingestion if datasets change
 
-```bash
-uvicorn app.main:app --reload
-```
-> The API will be available at `http://localhost:8000`
-> API Documentation (Swagger) is at `http://localhost:8000/docs`
+---
 
-**Ingest the Data:** To activate the RAG capability, you must build the FAISS index by calling the ingestion route (ensure your data is placed in the `datasets/` folder):
+## 🚀 Future Improvements
 
-```bash
-curl -X POST http://localhost:8000/api/documents/ingest
-```
+* Streaming responses (ChatGPT-like UX)
+* Better RAG ranking
+* Chat memory (context-aware)
+* Deployment (Docker + Cloud)
+
+---
 
 ## 🤝 Contributing
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+PRs are welcome. Feel free to improve RAG, UI, or add new datasets.
 
-## 📝 License
-Distributed under the MIT License. See `LICENSE` for more information.
+---
+
+## 📜 License
+
+MIT License

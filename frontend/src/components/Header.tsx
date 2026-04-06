@@ -16,6 +16,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
+  const primaryNavItems = NAV_ITEMS.filter((item) => item.path !== "/");
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
@@ -68,7 +69,7 @@ const Header: React.FC = () => {
             </DropdownMenu>
             
             {/* Other navigation items */}
-            {NAV_ITEMS.map((item) => (
+            {primaryNavItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
@@ -109,7 +110,7 @@ const Header: React.FC = () => {
           <MobileNav
             isOpen={isMenuOpen}
             onClose={() => setIsMenuOpen(false)}
-            navItems={NAV_ITEMS}
+            navItems={primaryNavItems}
             aboutUsItems={ABOUT_US_ITEMS}
           />
         </div>
