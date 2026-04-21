@@ -2,7 +2,7 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import { Search, BookOpen, ExternalLink, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-
+// act and rules
 const actsCategories = [
   {
     title: 'Constitutional & Fundamental',
